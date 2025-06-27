@@ -1,6 +1,8 @@
 local Requester = Class:extend()
 
 local computer = require("computer")
+local event = require("event")
+local serialization = require("serialization")
 
 local PORT = 10000
 
