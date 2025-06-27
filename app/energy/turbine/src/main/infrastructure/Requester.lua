@@ -30,7 +30,7 @@ end
 
 function Requester:fetchRatios()
     return RF.of(function()
-        local batteryRatios = nil--fetchBatteryRatios(self.timeout, self.modem)
+        local batteryRatios = fetchBatteryRatios(self.timeout, self.modem)
         if batteryRatios then
             return {isOk = true, value = batteryRatios}
         else
