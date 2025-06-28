@@ -42,7 +42,7 @@ function PumpService:computeNextState(currentState, ratios, timeElapsed)
       nextState = PumpState.ON
     end
   elseif currentState == PumpState.ON then
-    if timeElapsed > 10 and estimatedTime > 100 then
+    if timeElapsed > 10 then
       nextState = PumpState.BREAK
     elseif estimatedTime < 0 then
       nextState = PumpState.OFF
