@@ -93,7 +93,7 @@ local ResponseServiceSpec = Spec:extend({spec = {
       ["should successfully return go response with path to the machine to unload"] = function()
         local robotEvent = RobotEvent:new(
           RobotEvent.JOB_ASSIGNED,
-          {label = label, jobId = 1}
+          {label = label, conveyor = conveyor.label}
         )
         local responseService = ResponseService:new({
           navService = getNavService(startPath, side),

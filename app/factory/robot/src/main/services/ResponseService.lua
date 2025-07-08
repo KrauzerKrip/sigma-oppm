@@ -67,8 +67,8 @@ function ResponseService:getResponse(robotEvent, nearestWaypoint)
   if robotEvent.name == RobotEvent.LABEL_ASSIGNED then
     action = {what = 'assign', label = robotEvent.newLabel}
   elseif robotEvent.name == RobotEvent.JOB_ASSIGNED then
-    local conveyor, error = self:_getJobConveyor(robotEvent.jobId)
-    if not conveyor then return nil, error end
+    local conveyor = self.conveyors[robotEvent.conveyor]
+    if not conveyor then return nil, "No conveyor " .. tostring(robotEvent.conveyor) end
     local machineUnload = self.machines[conveyor.from]
     local from, to = nearestWaypoint, machineUnload.output.node
     local path = self.navService:getPath(from, to)
