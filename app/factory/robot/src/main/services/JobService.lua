@@ -20,18 +20,29 @@ function JobService:employNew()
 
   for k,v in pairs(self.conveyors) do
     if not occupiedConveyors[k] then
-      return k
+      return "CONVEYOR-" .. k .. ":1"
     end
   end
 
   return nil, "no free conveyor"
 end
 
-function JobService:createJob(conveyorLabel)
-  return {conveyor = conveyorLabel, phase = JobPhase.START}
+function JobService:createJob(robotLabel)
+  --    CONVEYOR-Diamond:1         -> Diamond:1          -> Diamond 
+  local conveyorLabel = robotLabel:gsub("CONVEYOR%-", ""):gsub("%:[^%:]*$", "")
+  if self.conveyors[conveyorLabel] then
+    return {conveyor = conveyorLabel, phase = JobPhase.START}
+  else
+    return nil, "no conveyor labeled " .. tostring(conveyorLabel) .." for robot " .. tostring(robotLabel)
+  end
 end
 
-function JobService:advance(jobPhase)
+function JobService:advance(robotLabel)
+  local assignment = self.getAssignments()[robotLabel]
+  if not assignment then
+    return nil, "no assignment found for robot " .. tostring(robotLabel)
+  end
+  local jobPhase = assignment.phase
   if jobPhase == JobPhase.START then
     return JobPhase.UNLOAD
   elseif jobPhase == JobPhase.UNLOAD then

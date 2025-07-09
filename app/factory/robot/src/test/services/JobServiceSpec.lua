@@ -34,7 +34,7 @@ end
 
 local JobServiceSpec = Spec:extend({spec = {
   ["JobService"] = {
-    ["when is asked for a conveyor for a new robot"] = {
+    ["when is asked for a label for a new robot"] = {
       ["every conveyor is free"] = {
         ["should successfully return a label of a conveyor for the robot to work on"] = function()
           local assignments = {}
@@ -44,12 +44,12 @@ local JobServiceSpec = Spec:extend({spec = {
             getJobSpec = getJobSpecsGetter(jobSpecs),
             conveyors = conveyors
           })
-        local label, error = jobService:employNew()
-        assert(label, "conveyor label is nil: " .. tostring(error))
+        local robotLabel, error = jobService:employNew()
+        assert(robotLabel, "robot label is nil: " .. tostring(error))
         assert(
-          label == conveyor1.label or 
-          label == conveyor2.label or
-          label == conveyor3.label,
+          robotLabel == "CONVEYOR-" .. conveyor1.label .. ":1" or 
+          robotLabel == "CONVEYOR-" .. conveyor2.label .. ":1" or
+          robotLabel == "CONVEYOR-" .. conveyor3.label .. ":1",
           "unexpected label: " .. tostring(label)
         )
       end,
@@ -73,11 +73,11 @@ local JobServiceSpec = Spec:extend({spec = {
             getJobSpec = getJobSpecsGetter(jobSpecs),
             conveyors = conveyors
           })
-        local label, error = jobService:employNew()
-        assert(label, "conveyor label is nil: " .. tostring(error))
+        local robotLabel, error = jobService:employNew()
+        assert(robotLabel, "robot label is nil: " .. tostring(error))
         assert(
-          label == conveyor3.label,
-          "unexpected label: " .. tostring(label)
+          robotLabel == "CONVEYOR-" .. conveyor3.label .. ":1",
+          "unexpected robot label: " .. tostring(robotLabel)
         )
       end,
       },
@@ -104,40 +104,69 @@ local JobServiceSpec = Spec:extend({spec = {
             getJobSpec = getJobSpecsGetter(jobSpecs),
             conveyors = conveyors
           })
-          local label, error = jobService:employNew()
-          assert(not label, "conveyor label is not nil")
+          local robotLabel, error = jobService:employNew()
+          assert(not robotLabel, "robot label is not nil")
           assert(error, "error is nil")
         end,
     }
   },
-  ["when is asked to create a job on the conveyor"] = {
+  ["when is asked to create a job on the conveyor for a robot"] = {
     ["should successfully return a label of the conveyor for the robot to work on"] = function()
+      local robotLabel = "CONVEYOR-" .. conveyor1.label .. ":1"
+      local assignments = {}
+      local jobSpecs = {}
       local jobService = JobService:new({
-            getAssignments = getAssignmentsGetter(nil),
-            getJobSpec = getJobSpecsGetter(nil),
+            getAssignments = getAssignmentsGetter(assignments),
+            getJobSpec = getJobSpecsGetter(jobSpecs),
             conveyors = conveyors
           })
-      local job = JobService:createJob(conveyor1.label)
-      assert(job, "job is nil")
+      local job, error = jobService:createJob(robotLabel)
+      assert(job, "job is nil: " .. tostring(error))
       assert(job.conveyor == conveyor1.label, "unexpected job conveyor label: " .. tostring(job.conveyor))
       assert(job.phase == JobPhase.START, "unexpected job phase: " .. tostring(job.phase))
     end,
   },
   ["when is asked to advance job phases"] = {
     ["should successfully advance job phases"] = function()
+      local phases = {JobPhase.START, JobPhase.UNLOAD, JobPhase.CARRY, JobPhase.LOAD}
+      local expectedPhases = {JobPhase.UNLOAD, JobPhase.CARRY, JobPhase.LOAD, nil}
+      local phaseConveyors = {}
+      for i=1,4 do
+        local conveyor = {
+          label = "Conveyor_PHASE_TEST_ADVANCE_FROM" .. phases[i],
+          from = "machineStart",
+          to = "machineEnd"
+        }
+        table.insert(phaseConveyors, conveyor)
+      end
+      local robots = {}
+      for i,v in ipairs(phaseConveyors) do
+        local robotLabel = "CONVEYOR-" .. v.label .. ":1"
+        table.insert(robots, robotLabel)
+      end
+      local jobSpecs = {}
+      local assignments = {}
+      for i,robotLabel in ipairs(robots) do
+        local assignment = {jobId = i, phase = phases[i]}
+        assignments[robotLabel] = assignment
+        jobSpecs[i] = {conveyor = phaseConveyors[i]}
+      end
       local jobService = JobService:new({
-            getAssignments = getAssignmentsGetter(nil),
-            getJobSpec = getJobSpecsGetter(nil),
+            getAssignments = getAssignmentsGetter(assignments),
+            getJobSpec = getJobSpecsGetter(jobSpecs),
             conveyors = conveyors
           })
-      local jobPhase1 = JobService:advance(JobPhase.START)
-      local jobPhase2 = JobService:advance(JobPhase.UNLOAD)
-      local jobPhase3 = JobService:advance(JobPhase.CARRY)
-      local jobPhase4 = JobService:advance(JobPhase.LOAD)
-      assert(jobPhase1 == JobPhase.UNLOAD, "job phase is " .. tostring(jobPhase1))
-      assert(jobPhase2 == JobPhase.CARRY, "job phase is " .. tostring(jobPhase2))
-      assert(jobPhase3 == JobPhase.LOAD, "job phase is " .. tostring(jobPhase3))
-      assert(jobPhase4 == nil, "job phase is not nil")
+      for i, robotLabel in ipairs(robots) do
+        local jobPhase = jobService:advance(robotLabel)
+        assert(
+          jobPhase == expectedPhases[i],
+          string.format(
+            "expected job phase %s, but got %s",
+            tostring(expectedPhases[i]),
+            tostring(jobPhase)
+          )
+        )
+      end
     end,
   }
 }}}
