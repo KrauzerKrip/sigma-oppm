@@ -5,7 +5,7 @@ local MachineEvent = {
     name = nil
 }
 
-function JobEvent:new(name, parameters)
+function MachineEvent:new(name, parameters)
     local t = {
         name = name
     }
@@ -28,4 +28,4 @@ function JobEvent:new(name, parameters)
     return t
 end
 
-return JobEvent
+return MachineEvent

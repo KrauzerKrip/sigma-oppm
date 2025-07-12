@@ -111,7 +111,7 @@ local JobServiceSpec = Spec:extend({spec = {
     }
   },
   ["when is asked to create a job on the conveyor for a robot"] = {
-    ["should successfully return a label of the conveyor for the robot to work on"] = function()
+    ["should successfully return the job for the robot on this conveyor"] = function()
       local robotLabel = "CONVEYOR-" .. conveyor1.label .. ":1"
       local assignments = {}
       local jobSpecs = {}
@@ -157,16 +157,71 @@ local JobServiceSpec = Spec:extend({spec = {
             conveyors = conveyors
           })
       for i, robotLabel in ipairs(robots) do
-        local jobPhase = jobService:advance(robotLabel)
+        local job = jobService:advance(robotLabel)
+        local expectedJobId = assignments[robotLabel].jobId
+        local expectedPhase = expectedPhases[i]
+        assert(job, "advanced job is nil")
         assert(
-          jobPhase == expectedPhases[i],
+          job.id == expectedJobId,
+          string.format(
+            "expected job id %s, but got %s",
+            tostring(expectedPhase),
+            tostring(job.id)
+          )
+        )
+        assert(
+          job.phase == expectedPhase,
           string.format(
             "expected job phase %s, but got %s",
-            tostring(expectedPhases[i]),
-            tostring(jobPhase)
+            tostring(expectedPhase),
+            tostring(job.phase)
           )
         )
       end
+    end,
+  },
+  ["when is asked if a robot assigned a job"] = {
+    ["should successfully return true"] = function()
+      local robot1 = "CONVEYOR-Conveyor1-ROBOT"
+      local robot2 = "CONVEYOR-Conveyor2-ROBOT"
+      local assignments = {
+        [robot1] = {
+          jobId = 1,
+        },
+        [robot2] = {
+          jobId = 2,
+        },
+      }
+      local jobSpecs = {
+        [1] = {conveyor = conveyor1.label},
+        [2] = {conveyor = conveyor2.label},
+      }
+      local jobService = JobService:new({
+        getAssignments = getAssignmentsGetter(assignments),
+        getJobSpec = getJobSpecsGetter(jobSpecs),
+        conveyors = conveyors
+      })
+      local isAssigned = jobService:isAssigned(robot1)
+      assert(isAssigned == true)
+    end,
+    ["should successfully return false"] = function()
+      local robot1 = "CONVEYOR-Conveyor1-ROBOT"
+      local robot2 = "CONVEYOR-Conveyor2-ROBOT"
+      local assignments = {
+        [robot2] = {
+          jobId = 1,
+        },
+      }
+      local jobSpecs = {
+        [1] = {conveyor = conveyor2.label},
+      }
+      local jobService = JobService:new({
+        getAssignments = getAssignmentsGetter(assignments),
+        getJobSpec = getJobSpecsGetter(jobSpecs),
+        conveyors = conveyors
+      })
+      local isAssigned = jobService:isAssigned(robot1)
+      assert(isAssigned == false)
     end,
   }
 }}}

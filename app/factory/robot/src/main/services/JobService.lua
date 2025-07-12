@@ -43,16 +43,28 @@ function JobService:advance(robotLabel)
     return nil, "no assignment found for robot " .. tostring(robotLabel)
   end
   local jobPhase = assignment.phase
+  local nextPhase = nil
   if jobPhase == JobPhase.START then
-    return JobPhase.UNLOAD
+    nextPhase = JobPhase.UNLOAD
   elseif jobPhase == JobPhase.UNLOAD then
-    return JobPhase.CARRY
+    nextPhase = JobPhase.CARRY
   elseif jobPhase == JobPhase.CARRY then
-    return JobPhase.LOAD
+    nextPhase = JobPhase.LOAD
   elseif jobPhase == JobPhase.LOAD then
-    return nil, nil
+    nextPhase = nil
   else
     return nil, "unknown job phase: " .. tostring(jobPhase)
+  end
+
+  return {id = assignment.jobId, phase = nextPhase}
+end
+
+function JobService:isAssigned(robotLabel)
+  local assignment = self.getAssignments()[robotLabel]
+  if assignment then
+    return true
+  else
+    return false
   end
 end
 

@@ -1,5 +1,5 @@
 local StatusEvent = {
-    STATUS_UPDATED = "INVENTORY_UPDATED",
+    STATUS_UPDATED = "STATUS_UPDATED",
 
     name = nil
 }
