@@ -218,6 +218,7 @@ local EventServiceSpec = Spec:extend({spec = {
               assert(not error)
               assertEq(robotEvent.name, RobotEvent.JOB_ASSIGNED)
               assertEq(robotEvent.conveyor, expectedConveyorLabel)
+              assertEq(robotEvent.phase, JobPhase.START)
             end,
           },
           ["when the robot is assigned a job that only started"] = {
@@ -271,6 +272,7 @@ local EventServiceSpec = Spec:extend({spec = {
               assert(not error)
               assertEq(robotEvent.name, RobotEvent.JOB_ASSIGNED)
               assertEq(robotEvent.conveyor, expectedConveyorLabel)
+              assertEq(robotEvent.phase, JobPhase.START)
             end,
           }
         },

@@ -26,7 +26,7 @@ function EventService:detectRobotEvent(robotUpdate)
           if not newJob then return nil, error end
           return RobotEvent:new(
             RobotEvent.JOB_ASSIGNED,
-            {label = robotUpdate.label, conveyor = newJob.conveyor}
+            {label = robotUpdate.label, conveyor = newJob.conveyor, phase = newJob.phase}
           )
         end
       else
@@ -34,7 +34,7 @@ function EventService:detectRobotEvent(robotUpdate)
         if not job then return nil, error end
         return RobotEvent:new(
           RobotEvent.JOB_ASSIGNED,
-          {label = robotUpdate.label, conveyor = job.conveyor}
+          {label = robotUpdate.label, conveyor = job.conveyor, phase = job.phase}
         )
       end
     else
